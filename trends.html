@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trends - EnviroHealth Hub</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="js/api.js" defer></script>
+  <script src="js/features.js" defer></script>
+  <script src="js/charts.js" defer></script>
+  <style>
+    .trends-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 24px;
+    }
+    .trend-stat {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 22px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .trend-stat:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0,229,255,0.08);
+    }
+    .trend-stat .label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .trend-stat .value {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .trend-stat .unit {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .trend-stat .change {
+      font-size: 13px;
+      margin-top: 4px;
+    }
+    .change.up { color: #ff6b6b; }
+    .change.down { color: #69db7c; }
+    .change.neutral { color: var(--text-muted); }
+    .chart-section {
+      margin-top: 28px;
+    }
+    .chart-section h3 {
+      margin-bottom: 16px;
+      font-size: 16px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .chart-section h3 i {
+      color: var(--accent);
+    }
+    .chart-wrap {
+      height: 320px;
+      position: relative;
+    }
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 8px;
+      height: 36px;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+    .aqi-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .aqi-bar-label { width: 45px; font-size: 13px; color: var(--text-muted); text-align: right; }
+    .aqi-bar-track {
+      flex: 1;
+      height: 10px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .aqi-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.8s cubic-bezier(.22,.61,.36,1);
+    }
+    .aqi-bar-val { width: 45px; font-size: 13px; color: var(--text-main); font-weight: 600; }
+    .no-data-msg {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 60px 0;
+      font-size: 15px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <nav class="navbar">
+    <div class="brand">
+      <i class="fa-solid fa-leaf" style="color: var(--accent);"></i>
+      EnviroHealth <span>Hub</span>
+    </div>
+
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="risk.html" class="nav-link">Plan</a>
+      <a href="trends.html" class="nav-link active">Trends</a>
+      <a href="map.html" class="nav-link">Map</a>
+      <a href="chatbot.html" class="nav-link">AI Assistant</a>
+    </div>
+
+    <div class="search-container">
+      <button class="btn" onclick="toggleTheme()" title="Toggle Light/Dark Mode"><i id="themeIcon" class="fa-solid fa-sun"></i></button>
+      <span style="color: var(--text-muted); align-self: center; margin-right: 15px;">Monitoring: <strong id="headerCity" style="color: white;">--</strong></span>
+      <a href="alerts.html" class="btn" title="Alerts"><i class="fa-solid fa-bell"></i></a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="header-row">
+      <div>
+        <h1 class="city-title">Air Quality Trends</h1>
+        <p class="city-subtitle" id="locationSubtitle">Historical AQI data and environmental forecast.</p>
+      </div>
+      <div>
+        <span id="lastUpdated" style="font-size: 13px; color: var(--text-muted);"></span>
+      </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="trends-grid" id="statsGrid">
+      <div class="trend-stat">
+        <div class="label">Air Quality Index</div>
+        <div><span class="value" id="statAqi">--</span> <span class="unit">AQI</span></div>
+        <div class="change neutral" id="statAqiChange">Loading...</div>
+      </div>
+      <div class="trend-stat">
+        <div class="label">Temperature</div>
+        <div><span class="value" id="statTemp">--</span> <span class="unit">°C</span></div>
+        <div class="change neutral" id="statTempNote">Current outdoor temp</div>
+      </div>
+      <div class="trend-stat">
+        <div class="label">Wind Speed</div>
+        <div><span class="value" id="statWind">--</span> <span class="unit">km/h</span></div>
+        <div class="change neutral" id="statWindNote">--</div>
+      </div>
+      <div class="trend-stat">
+        <div class="label">Humidity</div>
+        <div><span class="value" id="statHumidity">--</span> <span class="unit">%</span></div>
+        <div class="change neutral" id="statHumidityNote">--</div>
+      </div>
+    </div>
+
+    <!-- AQI 7-day Trend Chart -->
+    <div class="glass-card chart-section">
+      <h3><i class="fa-solid fa-chart-line"></i> 7-Day AQI Trend</h3>
+      <div class="chart-wrap">
+        <canvas id="aqiChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Daily AQI bars -->
+    <div class="glass-card chart-section">
+      <h3><i class="fa-solid fa-bars-progress"></i> Daily AQI Breakdown</h3>
+      <div id="aqiBarsContainer">
+        <div class="no-data-msg"><i class="fa-solid fa-spinner fa-spin"></i> Loading data...</div>
+      </div>
+    </div>
+
+    <!-- Health Impact Summary -->
+    <div class="glass-card chart-section">
+      <h3><i class="fa-solid fa-heart-pulse"></i> Health Impact Summary</h3>
+      <div id="healthSummary" style="color: var(--text-muted); font-size: 15px; line-height: 1.8;">
+        Loading health analysis...
+      </div>
+    </div>
+
+  </main>
+
+
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      if (!localStorage.getItem("ecoPulse_userName")) { window.location.href = "login.html"; return; }
+
+      const city = localStorage.getItem("ecoPulse_lastCity") || "New York";
+      const savedLat = localStorage.getItem("ecoPulse_lastLat");
+      const savedLon = localStorage.getItem("ecoPulse_lastLon");
+      const exactLat = savedLat ? parseFloat(savedLat) : null;
+      const exactLon = savedLon ? parseFloat(savedLon) : null;
+
+      document.getElementById("headerCity").innerText = city;
+      document.getElementById("locationSubtitle").innerText = `Environmental data for: ${city}`;
+      document.getElementById("lastUpdated").innerText = `Updated: ${new Date().toLocaleTimeString()}`;
+
+      try {
+        const cityData = await getCityData(city, exactLat, exactLon);
+        if (!cityData) throw new Error("No data");
+
+        // --- Populate Stats ---
+        document.getElementById("statAqi").innerText = cityData.aqi;
+        document.getElementById("statTemp").innerText = cityData.temp.toFixed(1);
+        document.getElementById("statWind").innerText = cityData.windSpeed;
+        document.getElementById("statHumidity").innerText = cityData.humidity || "--";
+
+        // Wind direction
+        const deg = cityData.windDir;
+        if (deg !== null && deg !== undefined) {
+          const dirs = ["N","NE","E","SE","S","SW","W","NW"];
+          const windDirLabel = dirs[Math.round(deg / 45) % 8];
+          const windKmh = cityData.windSpeed;
+          const windDesc = windKmh < 10 ? "Calm" : windKmh < 30 ? "Light Breeze" : windKmh < 60 ? "Moderate Wind" : "Strong Wind";
+          document.getElementById("statWindNote").innerText = `${windDesc} · ${windDirLabel}`;
+        } else {
+          document.getElementById("statWindNote").innerText = "--";
+        }
+
+        // AQI change vs yesterday
+        const diff = cityData.aqi - cityData.yesterdayAqi;
+        const aqiChangeEl = document.getElementById("statAqiChange");
+        if (diff > 0) {
+          aqiChangeEl.innerHTML = `<i class="fa-solid fa-arrow-up"></i> +${diff} worse than yesterday`;
+          aqiChangeEl.className = "change up";
+        } else if (diff < 0) {
+          aqiChangeEl.innerHTML = `<i class="fa-solid fa-arrow-down"></i> ${diff} better than yesterday`;
+          aqiChangeEl.className = "change down";
+        } else {
+          aqiChangeEl.innerHTML = `<i class="fa-solid fa-minus"></i> Same as yesterday`;
+          aqiChangeEl.className = "change neutral";
+        }
+
+        // Humidity note
+        const hum = cityData.humidity;
+        const humNote = hum > 80 ? "Very Humid" : hum > 60 ? "Comfortable" : hum > 40 ? "Moderate" : "Dry";
+        document.getElementById("statHumidityNote").innerText = humNote;
+
+        // --- 7-day AQI chart ---
+        if (cityData.forecastHistory && cityData.forecastHistory.labels.length > 0) {
+          renderChart(cityData.forecastHistory);
+
+          // Daily AQI bars
+          const bars = cityData.forecastHistory.labels.map((day, i) => {
+            const val = cityData.forecastHistory.data[i] || 0;
+            let color = "#69db7c";
+            if (val > 50) color = "#ffd43b";
+            if (val > 100) color = "#ff922b";
+            if (val > 150) color = "#fa5252";
+            const maxVal = Math.max(...cityData.forecastHistory.data, 1);
+            const pct = Math.min(100, Math.round((val / maxVal) * 100));
+            return `<div class="aqi-bar-row">
+              <div class="aqi-bar-label">${day}</div>
+              <div class="aqi-bar-track"><div class="aqi-bar-fill" style="width:${pct}%; background:${color};"></div></div>
+              <div class="aqi-bar-val">${val}</div>
+            </div>`;
+          }).join("");
+          document.getElementById("aqiBarsContainer").innerHTML = bars || '<div class="no-data-msg">No forecast breakdown available.</div>';
+        } else {
+          document.getElementById("aqiBarsContainer").innerHTML = '<div class="no-data-msg">No forecast data available for this location.</div>';
+        }
+
+        // --- Health Impact Summary ---
+        let aqi = cityData.aqi;
+        let healthHTML = "";
+        if (aqi <= 50) {
+          healthHTML = `<span style="color:#69db7c;font-weight:600;">✅ Good Air Quality (AQI ${aqi})</span><br>The air quality is satisfactory. Perfect for outdoor activities, jogging, or any sports. No health risks for the general public.`;
+        } else if (aqi <= 100) {
+          healthHTML = `<span style="color:#ffd43b;font-weight:600;">⚠️ Moderate Air Quality (AQI ${aqi})</span><br>Air quality is acceptable. However, people with unusual sensitivity to air pollution may experience minor discomfort. Avoid prolonged outdoor exertion.`;
+        } else if (aqi <= 150) {
+          healthHTML = `<span style="color:#ff922b;font-weight:600;">🟠 Unhealthy for Sensitive Groups (AQI ${aqi})</span><br>Children, the elderly, and those with respiratory or heart conditions should limit outdoor activity. General public is not at risk.`;
+        } else if (aqi <= 200) {
+          healthHTML = `<span style="color:#fa5252;font-weight:600;">🔴 Unhealthy (AQI ${aqi})</span><br>Everyone may begin to experience health effects. People with heart or lung disease, children and older adults are at greater risk. Avoid outdoor exertion.`;
+        } else {
+          healthHTML = `<span style="color:#cc5de8;font-weight:600;">🟣 Very Unhealthy / Hazardous (AQI ${aqi})</span><br>Health alert! Everyone may experience serious health effects. Remain indoors with windows sealed and use air purifiers if available.`;
+        }
+
+        if (cityData.temp >= 35) {
+          healthHTML += `<br><br><span style="color:#ff6b6b;font-weight:600;">🌡️ Heat Warning!</span> Temperature is ${cityData.temp.toFixed(1)}°C. Stay hydrated and avoid direct sun exposure during midday.`;
+        }
+        if (cityData.uv >= 6) {
+          healthHTML += `<br><span style="color:#ffd43b;font-weight:600;">☀️ High UV (${cityData.uv})</span> — Apply SPF 40+ sunscreen and wear protective clothing.`;
+        }
+        if (cityData.precip >= 5) {
+          healthHTML += `<br><span style="color:#74c0fc;font-weight:600;">🌧️ Rain Alert</span> — ${cityData.precip}mm of precipitation expected. Carry an umbrella and avoid flooded areas.`;
+        }
+
+        document.getElementById("healthSummary").innerHTML = healthHTML;
+
+      } catch (e) {
+        console.error(e);
+        document.getElementById("statsGrid").innerHTML = '<p style="color:var(--text-muted); padding: 20px;">Unable to load trend data. Please return to Home and search for a city first.</p>';
+      }
+    });
+  </script>
+</body>
+
+</html>

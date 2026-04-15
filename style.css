@@ -1,0 +1,395 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
+:root {
+  --bg-gradient: linear-gradient(135deg, #0d0e15 0%, #1a1a2e 100%);
+  --card-bg: rgba(255, 255, 255, 0.03);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --text-main: #f1f1f1;
+  --text-muted: #9babab;
+  --accent: #00e5ff;
+  --accent-glow: rgba(0, 229, 255, 0.5);
+  
+  --color-good: #00e676;
+  --color-moderate: #ffea00;
+  --color-poor: #ff9100;
+  --color-severe: #ff1744;
+}
+
+[data-theme="light"] {
+  --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+  --card-bg: rgba(255, 255, 255, 0.6);
+  --card-border: rgba(0, 0, 0, 0.08);
+  --text-main: #1a1a2e;
+  --text-muted: #555566;
+  --accent: #0088cc;
+  --accent-glow: rgba(0, 136, 204, 0.5);
+  
+  --color-good: #00a050;
+  --color-moderate: #d4a000;
+  --color-poor: #e65c00;
+  --color-severe: #cc0022;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Outfit', sans-serif;
+}
+
+body {
+  background: var(--bg-gradient);
+  color: var(--text-main);
+  min-height: 100vh;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Background animated glow orbs */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  z-index: -1;
+  animation: float 20s infinite alternate;
+}
+.orb-1 {
+  width: 400px; height: 400px;
+  background: rgba(0, 229, 255, 0.15);
+  top: -100px; left: -100px;
+}
+.orb-2 {
+  width: 300px; height: 300px;
+  background: rgba(189, 0, 255, 0.1);
+  bottom: 10%; right: -50px;
+}
+
+@keyframes float {
+  0% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-50px) scale(1.1); }
+}
+
+/* Navbar */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background: rgba(13, 14, 21, 0.4);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--card-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.brand {
+  font-size: 24px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-main);
+}
+.brand span { color: var(--accent); }
+
+.search-container {
+  display: flex;
+  gap: 10px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+.nav-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+  font-size: 16px;
+}
+.nav-link:hover, .nav-link.active {
+  color: var(--accent);
+}
+
+.search-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--card-border);
+  color: var(--text-main);
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-size: 16px;
+  outline: none;
+  transition: all 0.3s ease;
+  width: 250px;
+}
+.search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.btn {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-main);
+  padding: 10px 20px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #000;
+  border: none;
+}
+.btn-danger {
+  background: var(--color-severe);
+  color: white;
+  border: none;
+}
+.btn:hover {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,0.1);
+}
+.btn-primary:hover {
+  background: #00b3cc;
+}
+.btn-danger:hover {
+  background: #d50000;
+  box-shadow: 0 0 10px rgba(255, 23, 68, 0.4);
+}
+
+/* Main Layout */
+.container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  flex: 1;
+  width: 100%;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.city-title {
+  font-size: 42px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.city-subtitle {
+  color: var(--text-muted);
+  font-size: 18px;
+}
+
+/* Glass Card Base */
+.glass-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hero Risk Card */
+.hero-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 200px;
+}
+.risk-label {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.risk-value {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 15px;
+  background-clip: text;
+  -webkit-background-clip: text;
+  transition: color 0.5s ease;
+}
+.risk-message {
+  font-size: 18px;
+  color: var(--text-main);
+  max-width: 600px;
+  line-height: 1.5;
+}
+
+/* Metrics Grid */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.3s ease;
+}
+.metric-card:hover {
+  transform: translateY(-5px);
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  color: var(--text-muted);
+  font-size: 16px;
+}
+
+.metric-value {
+  font-size: 36px;
+  font-weight: 600;
+}
+
+.metric-unit {
+  font-size: 16px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.metric-status {
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Charts Section */
+.chart-container {
+  height: 300px;
+  width: 100%;
+}
+
+/* Modal Elements */
+.modal {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.modal.active {
+  opacity: 1;
+  pointer-events: all;
+}
+.modal-content {
+  width: 400px;
+  background: #1a1a2e;
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 30px;
+}
+.modal-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+.form-group {
+  margin-bottom: 20px;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-muted);
+}
+.form-group select {
+  width: 100%;
+  padding: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--card-border);
+  color: var(--text-main);
+  border-radius: 10px;
+  font-size: 16px;
+}
+.form-group select option {
+  background: #1a1a2e;
+  color: white;
+}
+
+/* Loader */
+.loader {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(13, 14, 21, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 500;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.loader.active {
+  display: flex;
+}
+.spinner {
+  width: 50px; height: 50px;
+  border: 4px solid rgba(255,255,255,0.1);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .navbar { flex-direction: column; gap: 15px; }
+  .header-row { flex-direction: column; align-items: flex-start; gap: 10px; }
+}
+
+/* Print optimizations to fix PDF cut-off */
+@media print {
+  body, html {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+  .container {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .glass-card {
+    height: auto !important;
+    overflow: visible !important;
+    background: none !important;
+    border: 1px solid #ccc !important;
+    backdrop-filter: none !important;
+  }
+  .navbar, .btn {
+    display: none !important;
+  }
+  .orb {
+    display: none !important;
+  }
+}
+

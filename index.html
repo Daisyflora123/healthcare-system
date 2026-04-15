@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EnviroHealth Hub</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="js/api.js" defer></script>
+  <script src="js/risk-engine.js" defer></script>
+  <script src="js/features.js" defer></script>
+</head>
+
+<body>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+    <p>Fetching environmental data...</p>
+    <p style="font-size: 12px; margin-top: 10px; color: var(--text-muted);" id="loaderStatus"></p>
+  </div>
+
+  <nav class="navbar">
+    <div class="brand">
+      <i class="fa-solid fa-leaf" style="color: var(--accent);"></i>
+      EnviroHealth <span>Hub</span>
+    </div>
+
+    <div class="nav-links">
+      <a href="index.html" class="nav-link active">Home</a>
+      <a href="risk.html" class="nav-link">Plan</a>
+      <a href="trends.html" class="nav-link">Trends</a>
+      <a href="map.html" class="nav-link">Map</a>
+      <a href="chatbot.html" class="nav-link">AI Assistant</a>
+    </div>
+
+    <div class="search-container">
+      <button class="btn" onclick="toggleTheme()" title="Toggle Light/Dark Mode"><i id="themeIcon"
+          class="fa-solid fa-sun"></i></button>
+      <input type="text" id="cityInput" class="search-input" placeholder="City name"
+        onkeypress="handleEnter(event)">
+      <input type="text" id="coordsInput" class="search-input" placeholder="Lat, Lon (e.g. 51.5,-0.1)" style="width: 200px;" onkeypress="handleEnter(event)">
+      <button class="btn btn-primary" onclick="loadCity()"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+      <button class="btn" onclick="openSettings()"><i class="fa-solid fa-gear"></i> Profile</button>
+      <a href="alerts.html" class="btn" title="Alerts"><i class="fa-solid fa-bell"></i></a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="header-row">
+      <div>
+        <h1 class="city-title" id="cityName">Locating...</h1>
+        <p class="city-subtitle" id="countryName">--</p>
+      </div>
+      <div>
+        <button id="watchlistToggleBtn" class="btn btn-primary" onclick="toggleWatchlist()">
+          <i id="watchlistIcon" class="fa-solid fa-bookmark"></i> <span id="watchlistText">Save to Watchlist</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Watchlist Array -->
+    <div style="margin-bottom: 5px;">
+      <span style="font-size: 12px; color: var(--text-muted); margin-bottom: 5px; display: block;">SAVED
+        LOCATIONS:</span>
+      <div id="watchlistContainer" style="display: flex; flex-wrap: wrap;"></div>
+    </div>
+
+    <!-- Hero Risk Card -->
+    <div class="glass-card hero-card" id="riskCard">
+      <div style="display:flex; justify-content: space-between; width: 100%; align-items: flex-start;">
+        <div>
+          <div class="risk-label">Current Health Risk</div>
+          <div class="risk-value" id="riskLevel">--</div>
+          <p class="risk-message" id="riskMessage">Detecting environment...</p>
+        </div>
+        <div style="text-align: right;">
+          <div class="risk-label">Eco-Safety Score</div>
+          <div class="risk-value" id="ecoScore" style="font-size: 42px; color: var(--accent);">--</div>
+          <button class="btn" onclick="readRiskAloud()" style="margin-top: 10px; font-size: 12px; color: #888888;"><i
+              class="fa-solid fa-volume-high"></i> Listen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metrics Grid -->
+    <div class="metrics-grid">
+      <div class="glass-card metric-card">
+        <div class="metric-header">
+          <span>Air Quality Index</span>
+          <i class="fa-solid fa-wind" style="color: var(--text-muted);"></i>
+        </div>
+        <div>
+          <span class="metric-value" id="aqiValue">--</span>
+          <span class="metric-unit">AQI</span>
+          <div class="metric-status" id="aqiContext"
+            style="color: var(--text-muted); font-size: 12px; margin-top: 5px;">--</div>
+        </div>
+      </div>
+
+      <div class="glass-card metric-card">
+        <div class="metric-header">
+          <span>Wind Speed</span>
+          <i class="fa-solid fa-wind" style="color: var(--text-muted);"></i>
+        </div>
+        <div>
+          <span class="metric-value" id="windValue">--</span>
+          <span class="metric-unit">km/h</span>
+          <div class="metric-status" id="windDir"
+            style="color: var(--text-muted); font-size: 12px; margin-top: 5px;">--</div>
+        </div>
+      </div>
+
+      <div class="glass-card metric-card">
+        <div class="metric-header">
+          <span>Temperature</span>
+          <i class="fa-solid fa-temperature-half" style="color: var(--text-muted);"></i>
+        </div>
+        <div>
+          <span class="metric-value" id="tempValue">--</span>
+          <span class="metric-unit">°C</span>
+        </div>
+      </div>
+
+      <div class="glass-card metric-card">
+        <div class="metric-header">
+          <span>Humidity</span>
+          <i class="fa-solid fa-droplet" style="color: var(--text-muted);"></i>
+        </div>
+        <div>
+          <span class="metric-value" id="humidityValue">--</span>
+          <span class="metric-unit">%</span>
+          <div class="metric-status" id="humidityNote"
+            style="color: var(--text-muted); font-size: 12px; margin-top: 5px;">--</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Settings Modal for Personalization -->
+  <div class="modal" id="settingsModal">
+    <div class="modal-content">
+      <h2 class="modal-title">Personalized Profile</h2>
+      <p style="color: var(--text-muted); margin-bottom: 20px;">We tailor health warnings based on your sensitivities.
+      </p>
+      <div class="form-group">
+        <label for="healthProfile">Primary Health Condition</label>
+        <select id="healthProfile">
+          <option value="none">No specific conditions (Healthy)</option>
+          <option value="asthma">Asthma or Respiratory Issues</option>
+          <option value="senior">Senior Citizen</option>
+          <option value="heart">Heart Condition</option>
+        </select>
+      </div>
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button class="btn" onclick="closeSettings()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveSettings()">Save & Recalculate</button>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      // Check auth lock
+      if (!localStorage.getItem("ecoPulse_userName")) { window.location.href = "login.html"; return; }
+
+      renderWatchlist();
+
+      const profilesRaw = localStorage.getItem("ecoPulse_userProfiles") || '["none"]';
+      const userProfiles = JSON.parse(profilesRaw);
+      // Removed the document.getElementById("healthProfile").value assignment because we moved onboarding to login.html
+
+      const savedCity = localStorage.getItem("ecoPulse_lastCity");
+      const savedLat = localStorage.getItem("ecoPulse_lastLat");
+      const savedLon = localStorage.getItem("ecoPulse_lastLon");
+      const useGeo = !savedCity || !sessionStorage.getItem("geoRan");
+      sessionStorage.setItem("geoRan", "1"); // Only auto-geo on first sess load
+
+      if (useGeo) {
+        document.getElementById("loaderStatus").innerText = "Requesting GPS coordinates...";
+        const loader = document.getElementById("loader");
+        loader.classList.add("active");
+
+        // Trigger free Geocoding
+        const geoResult = await getDeviceLocation();
+        if (geoResult) {
+          document.getElementById("coordsInput").value = `${geoResult.lat}, ${geoResult.lon}`;
+        } else {
+          document.getElementById("cityInput").value = "Delhi"; // fallback to India
+        }
+      } else if (savedLat && savedLon) {
+        // Use saved coordinates so neighbourhood names like "Shah and Anchor" always work
+        document.getElementById("cityInput").value = savedCity;
+        document.getElementById("coordsInput").value = `${savedLat}, ${savedLon}`;
+      } else {
+        document.getElementById("cityInput").value = savedCity;
+      }
+
+      loadCity();
+    });
+
+   function handleEnter(e) {
+  if (e.key === "Enter") loadCity();
+}
+
+    async function loadCity() {
+      let city = document.getElementById("cityInput").value.trim();
+      let coords = document.getElementById("coordsInput").value.trim();
+      let exactLat = null;
+      let exactLon = null;
+      
+      if (!city && !coords) return;
+
+      const loader = document.getElementById("loader");
+      document.getElementById("loaderStatus").innerText = "Processing atmosphere data...";
+      loader.classList.add("active");
+
+      try {
+        if (coords) {
+           function parseCoordsStr(str) {
+               const regex = /([+-]?\d+(?:\.\d+)?)\s*([NSEW])?/gi;
+               let matches = [...str.matchAll(regex)];
+               if (matches.length < 2) return null;
+               
+               let parsedLat = null;
+               let parsedLon = null;
+               
+               for (let i = 0; i < 2; i++) {
+                   let val = parseFloat(matches[i][1]);
+                   let dir = matches[i][2] ? matches[i][2].toUpperCase() : null;
+                   
+                   if (dir === 'S') { parsedLat = -Math.abs(val); }
+                   else if (dir === 'N') { parsedLat = Math.abs(val); }
+                   else if (dir === 'W') { parsedLon = -Math.abs(val); }
+                   else if (dir === 'E') { parsedLon = Math.abs(val); }
+                   else {
+                       if (i === 0) parsedLat = val;
+                       if (i === 1) parsedLon = val;
+                   }
+               }
+               
+               if (parsedLat === null || parsedLon === null || isNaN(parsedLat) || isNaN(parsedLon)) return null;
+               if (parsedLat < -90 || parsedLat > 90 || parsedLon < -180 || parsedLon > 180) return null;
+               
+               return { lat: parsedLat, lon: parsedLon };
+           }
+
+           const parsed = parseCoordsStr(coords);
+           if (!parsed) {
+               alert("Please enter valid Latitude, Longitude (e.g. 51.5N, 0.1W or 51.5, -0.1)");
+               loader.classList.remove("active");
+               return;
+           }
+
+           document.getElementById("loaderStatus").innerText = "Geocoding coordinates...";
+           const lat = parsed.lat;
+           const lon = parsed.lon;
+           
+           if (typeof getCityFromCoords === 'function') {
+               const resolvedCity = await getCityFromCoords(lat, lon);
+               city = (resolvedCity && resolvedCity !== "Unknown Location") ? resolvedCity : "Custom Coordinate Location";
+               document.getElementById("cityInput").value = city;
+               document.getElementById("coordsInput").value = "";
+               exactLat = lat;
+               exactLon = lon;
+           }
+        }
+
+        if (!city && exactLat === null) throw new Error("No city selected.");
+
+        const cityData = await getCityData(city, exactLat, exactLon);
+        if (!cityData) throw new Error("Fetch failed.");
+        localStorage.setItem("ecoPulse_lastCity", cityData.name);
+        localStorage.setItem("ecoPulse_lastLat", cityData.lat);
+        localStorage.setItem("ecoPulse_lastLon", cityData.lon);
+        localStorage.setItem("ecoPulse_lastAqi", cityData.aqi);
+        localStorage.setItem("ecoPulse_lastTemp", cityData.temp.toFixed(1));
+        localStorage.setItem("ecoPulse_lastHumidity", cityData.humidity);
+
+        document.getElementById("cityName").innerText = cityData.name;
+        document.getElementById("countryName").innerText = cityData.country;
+
+        document.getElementById("aqiValue").innerText = cityData.aqi;
+        document.getElementById("windValue").innerText = cityData.windSpeed;
+        document.getElementById("tempValue").innerText = cityData.temp.toFixed(1);
+        document.getElementById("humidityValue").innerText = cityData.humidity;
+
+        // Wind direction label
+        const deg = cityData.windDir;
+        let windDirLabel = "--";
+        if (deg !== null) {
+          const dirs = ["N","NE","E","SE","S","SW","W","NW"];
+          windDirLabel = dirs[Math.round(deg / 45) % 8];
+        }
+        document.getElementById("windDir").innerText = `Direction: ${windDirLabel}`;
+
+        // Humidity label
+        const hum = cityData.humidity;
+        const humNote = hum > 80 ? "Very Humid" : hum > 60 ? "Comfortable" : hum > 40 ? "Moderate" : "Dry";
+        document.getElementById("humidityNote").innerText = humNote;
+
+        // Contextual Text for History Diff
+        const diff = cityData.aqi - cityData.yesterdayAqi;
+        let diffStr = diff > 0 ? `+${diff} worse than yesterday` : `${diff} better than yesterday`;
+        document.getElementById("aqiContext").innerText = diffStr;
+
+        // User Profile Array Risk Calculation
+        const userProfilesRaw = localStorage.getItem("ecoPulse_userProfiles") || '["none"]';
+        const userProfiles = JSON.parse(userProfilesRaw);
+        const risk = calculateRisk(cityData, userProfiles);
+
+        const riskCardEl = document.getElementById("riskCard");
+        const riskLevelEl = document.getElementById("riskLevel");
+
+        riskLevelEl.innerText = risk.level;
+        riskLevelEl.style.color = risk.color;
+        document.getElementById("ecoScore").innerText = risk.score + "/100";
+        document.getElementById("riskMessage").innerText = risk.message;
+
+        // Save current risk payload locally so readAloud can grab it without recalculating
+        window.currentRiskText = risk.message;
+
+        riskCardEl.style.boxShadow = `inset 0 0 50px ${risk.color}11, 0 0 20px ${risk.color}22`;
+        riskCardEl.style.borderColor = `${risk.color}44`;
+
+        if (typeof updateWatchlistButton === 'function') updateWatchlistButton();
+
+      } catch (err) {
+        console.error(err);
+        alert("❌ " + (err.message || "Location not found. Please try a different name."));
+      } finally {
+        loader.classList.remove("active");
+      }
+    }
+
+
+    function readRiskAloud() {
+      if (window.currentRiskText) speakText(window.currentRiskText);
+    }
+
+    // Modal
+    function openSettings() { document.getElementById("settingsModal").classList.add("active"); }
+    function closeSettings() { document.getElementById("settingsModal").classList.remove("active"); }
+    function saveSettings() {
+      localStorage.setItem("ecoPulse_profile", document.getElementById("healthProfile").value);
+      closeSettings();
+      loadCity();
+    }
+  </script>
+</body>
+
+</html>

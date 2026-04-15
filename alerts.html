@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>City Alerts - EnviroHealth Hub</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="js/api.js" defer></script>
+  <script src="js/features.js" defer></script>
+  <script src="js/alerts.js" defer></script>
+</head>
+<body>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <nav class="navbar">
+    <div class="brand">
+      <i class="fa-solid fa-leaf" style="color: var(--accent);"></i>
+      EnviroHealth <span>Hub</span>
+    </div>
+
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="risk.html" class="nav-link">Risk</a>
+      <a href="trends.html" class="nav-link">Trends</a>
+
+      <a href="map.html" class="nav-link">Map</a>
+      <a href="chatbot.html" class="nav-link">AI Assistant</a>
+    </div>
+
+    <div class="search-container">
+      <button class="btn" onclick="toggleTheme()" title="Toggle Light/Dark Mode"><i id="themeIcon" class="fa-solid fa-sun"></i></button>
+      <span style="color: var(--text-muted); align-self: center; margin-right: 15px;">Monitoring: <strong id="headerCity" style="color: white;">--</strong></span>
+      <a href="alerts.html" class="btn" title="Alerts"><i class="fa-solid fa-bell"></i></a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <h1 class="city-title">Live Notification Feed</h1>
+    <p class="city-subtitle">Automated system alerts and warnings based on environmental sensors.</p>
+
+    <div id="alertsContainer" style="margin-top: 30px; display: flex; flex-direction: column; gap: 15px;">
+      <!-- Alerts will spawn here -->
+      <p style="color: var(--text-muted)">Loading tracking feeds...</p>
+    </div>
+    
+  </main>
+
+
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      // Check auth lock
+      if (!localStorage.getItem("ecoPulse_userName")) { window.location.href = "login.html"; return; }
+
+      const city = localStorage.getItem("ecoPulse_lastCity") || "New York";
+      const profilesRaw = localStorage.getItem("ecoPulse_userProfiles") || '["none"]';
+      const userProfiles = JSON.parse(profilesRaw);
+      document.getElementById("headerCity").innerText = city;
+
+      try {
+        const savedLat2 = localStorage.getItem("ecoPulse_lastLat");
+        const savedLon2 = localStorage.getItem("ecoPulse_lastLon");
+        const exactLat2 = savedLat2 ? parseFloat(savedLat2) : null;
+        const exactLon2 = savedLon2 ? parseFloat(savedLon2) : null;
+        const cityData = await getCityData(city, exactLat2, exactLon2);
+        if (cityData) {
+          const feeds = generateAlertsFeed(cityData, userProfiles);
+          
+          const container = document.getElementById("alertsContainer");
+          container.innerHTML = ""; // clear loading text
+          
+          feeds.forEach(f => {
+             const div = document.createElement("div");
+             div.className = "glass-card";
+             div.style.display = "flex";
+             div.style.gap = "20px";
+             div.style.alignItems = "center";
+             div.style.padding = "20px";
+             
+             let colorConfig = "var(--text-muted)";
+             if(f.type === "danger") colorConfig = "var(--color-severe)";
+             if(f.type === "warning") colorConfig = "var(--color-poor)";
+             if(f.type === "success") colorConfig = "var(--color-good)";
+             if(f.type === "info") colorConfig = "var(--accent)";
+
+             div.innerHTML = `
+               <div style="font-size: 32px; color: ${colorConfig};">
+                 <i class="${f.icon}"></i>
+               </div>
+               <div style="flex: 1;">
+                  <h3 style="margin-bottom: 5px;">${f.title}</h3>
+                  <p style="color: var(--text-main); font-size: 16px;">${f.desc}</p>
+               </div>
+               <div style="color: var(--text-muted); font-size: 14px;">
+                  ${f.time}
+               </div>
+             `;
+             container.appendChild(div);
+          });
+        }
+      } catch(e) {
+        console.error(e);
+      }
+    });
+  </script>
+</body>
+</html>

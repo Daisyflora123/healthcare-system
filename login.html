@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - EnviroHealth Hub</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .auth-container {
+      max-width: 500px;
+      margin: 80px auto;
+      padding: 40px;
+    }
+    .problem-checkboxes {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,255,255,0.05);
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .check-item input {
+      accent-color: var(--accent);
+      width: 18px;
+      height: 18px;
+    }
+    #customProblem {
+      width: 100%;
+      padding: 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      border-radius: 8px;
+      margin-top: 10px;
+      display: none;
+    }
+  </style>
+</head>
+<body data-theme="dark">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <div class="glass-card auth-container">
+    <div style="text-align: center; margin-bottom: 30px;">
+      <div class="brand" style="justify-content: center; font-size: 32px; margin-bottom: 5px;">
+        <i class="fa-solid fa-leaf" style="color: var(--accent);"></i> EnviroHealth <span>Hub</span>
+      </div>
+      <p style="color: var(--text-muted); font-size: 16px; margin-bottom: 20px; font-style: italic;">“Predicting risks. Protecting lives.” 🛡️</p>
+      <p style="color: var(--text-muted)">Create your personalized ambient health tracker.</p>
+    </div>
+
+    <form id="signupForm" onsubmit="handleSignup(event)">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="userName" class="search-input" style="width: 100%;" required placeholder="John Doe">
+      </div>
+      
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="userEmail" class="search-input" style="width: 100%;" required placeholder="john@example.com">
+      </div>
+
+      <div class="form-group" style="margin-top: 30px;">
+        <label style="font-size: 18px; color: var(--accent); font-weight: 600;">Tell us about any health conditions</label>
+        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 15px;">We will customize your daily safety plan based on your selections.</p>
+        
+        <div class="problem-checkboxes">
+          <label class="check-item"><input type="checkbox" value="asthma" class="health-cb" onchange="uncheckNone()"> Asthma / Respiratory Issues</label>
+          <label class="check-item"><input type="checkbox" value="heart" class="health-cb" onchange="uncheckNone()"> Heart Condition / High BP</label>
+          <label class="check-item"><input type="checkbox" value="senior" class="health-cb" onchange="uncheckNone()"> Age 65+ (Senior Citizen)</label>
+          <label class="check-item"><input type="checkbox" value="allergies" class="health-cb" onchange="uncheckNone()"> Severe Allergies</label>
+          <label class="check-item"><input type="checkbox" id="otherCb" value="other" onchange="toggleCustom(); uncheckNone()"> Other (Write your own)</label>
+          <label class="check-item" style="border: 1px solid var(--accent); margin-top: 10px;"><input type="checkbox" id="noneCb" value="none" class="health-cb" onchange="toggleNone()"> None (I am perfectly fit & healthy)</label>
+        </div>
+        
+        <input type="text" id="customProblem" placeholder="E.g. Migraines, Pregnancy, Skin condition...">
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 18px; padding: 15px; margin-top: 20px;">
+        Initialize Dashboard <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </form>
+  </div>
+
+  <script src="js/features.js"></script>
+  <script>
+    function toggleCustom() {
+      const cb = document.getElementById('otherCb');
+      const input = document.getElementById('customProblem');
+      input.style.display = cb.checked ? 'block' : 'none';
+      if(cb.checked) input.focus();
+    }
+
+    function toggleNone() {
+      const noneCb = document.getElementById('noneCb');
+      if (noneCb.checked) {
+        document.querySelectorAll('.health-cb').forEach(cb => {
+          if (cb.id !== 'noneCb') cb.checked = false;
+        });
+        document.getElementById('otherCb').checked = false;
+        toggleCustom();
+      }
+    }
+
+    function uncheckNone() {
+      const noneCb = document.getElementById('noneCb');
+      if (noneCb) noneCb.checked = false;
+    }
+
+    function handleSignup(e) {
+      e.preventDefault();
+      
+      const name = document.getElementById('userName').value;
+      const checkboxes = document.querySelectorAll('.health-cb');
+      let profiles = [];
+      
+      checkboxes.forEach(cb => {
+        if(cb.checked && cb.value !== 'other') {
+          profiles.push(cb.value);
+        }
+      });
+
+      const otherCb = document.getElementById('otherCb');
+      if (otherCb.checked) {
+         const customTxt = document.getElementById('customProblem').value.trim();
+         if (customTxt) profiles.push(customTxt);
+      }
+
+      // If they selected absolutely nothing, push healthy
+      if (profiles.length === 0) profiles.push("healthy");
+
+      localStorage.setItem("ecoPulse_userName", name);
+      localStorage.setItem("ecoPulse_userProfiles", JSON.stringify(profiles));
+      
+      // Clear the old string-based profile to avoid conflicts
+      localStorage.removeItem("ecoPulse_profile");
+
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>

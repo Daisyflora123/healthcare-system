@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Health Plan - EnviroHealth Hub</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="js/api.js" defer></script>
+  <script src="js/risk-engine.js" defer></script>
+  <script src="js/features.js" defer></script>
+  <style>
+    /* ── Doctor Disclaimer Banner ─────────────────────────────────────── */
+    .disclaimer-banner {
+      margin: 24px 0 0;
+      padding: 18px 24px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(255, 180, 0, 0.12), rgba(255, 100, 0, 0.08));
+      border: 1.5px solid rgba(255, 180, 0, 0.35);
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .disclaimer-icon {
+      font-size: 32px;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    .disclaimer-text h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffbb33;
+      margin: 0 0 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .disclaimer-text p {
+      font-size: 14.5px;
+      color: var(--text-main);
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    .disclaimer-text strong {
+      color: #ffbb33;
+    }
+
+    /* ── Risk Card ────────────────────────────────────────────────────── */
+    .risk-card-inner {
+      padding: 22px;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+      margin-bottom: 24px;
+      transition: border-color 0.4s, box-shadow 0.4s;
+    }
+
+    .risk-level-title {
+      font-size: 28px;
+      font-weight: 800;
+      margin: 0 0 10px;
+    }
+
+    .risk-message {
+      font-size: 16px;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    /* ── Do / Avoid columns ──────────────────────────────────────────── */
+    .advice-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+
+    .advice-col {
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .advice-col h3 {
+      font-size: 15px;
+      font-weight: 700;
+      margin: 0 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .advice-list {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .advice-list li {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text-main);
+    }
+
+    /* ── Gear / Products Section ─────────────────────────────────────── */
+    .gear-section {
+      margin-top: 28px;
+    }
+
+    .gear-section h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .gear-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    .gear-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 16px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .gear-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+    }
+
+    .gear-card-icon {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .gear-card-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin: 0 0 6px;
+    }
+
+    .gear-card-desc {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    /* ── Env Context Cards ───────────────────────────────────────────── */
+    .env-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .env-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 13px;
+      color: var(--text-muted);
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .env-chip strong {
+      color: var(--text-main);
+      display: block;
+      font-size: 16px;
+      margin-bottom: 2px;
+    }
+
+    /* ── No gear message ─────────────────────────────────────────────── */
+    .no-gear {
+      color: var(--text-muted);
+      font-size: 14px;
+      font-style: italic;
+      padding: 10px 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <nav class="navbar">
+    <div class="brand">
+      <i class="fa-solid fa-leaf" style="color: var(--accent);"></i>
+      EnviroHealth <span>Hub</span>
+    </div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="risk.html" class="nav-link active">Plan</a>
+      <a href="trends.html" class="nav-link">Trends</a>
+      <a href="map.html" class="nav-link">Map</a>
+      <a href="chatbot.html" class="nav-link">AI Assistant</a>
+    </div>
+    <div class="search-container">
+      <button class="btn" onclick="toggleTheme()" title="Toggle Light/Dark Mode"><i id="themeIcon"
+          class="fa-solid fa-sun"></i></button>
+      <span style="color: var(--text-muted); align-self: center; margin-right: 15px;">Monitoring: <strong
+          id="headerCity" style="color: white;">--</strong></span>
+      <button class="btn" onclick="openSettings()"><i class="fa-solid fa-gear"></i> Profile</button>
+      <a href="alerts.html" class="btn" title="Alerts"><i class="fa-solid fa-bell"></i></a>
+    </div>
+  </nav>
+
+  <main class="container">
+
+    <!-- Page Heading -->
+    <div class="header-row">
+      <div>
+        <h1 class="city-title">Your Daily Health Plan</h1>
+        <p class="city-subtitle">Simple advice based on today's air quality & weather — easy to follow, easy to understand.</p>
+      </div>
+      <div>
+        <button class="btn btn-primary" onclick="printReport()"><i class="fa-solid fa-print"></i> Export / Print</button>
+      </div>
+    </div>
+
+    <!-- ⚕️ Doctor Disclaimer Banner -->
+    <div class="disclaimer-banner">
+      <div class="disclaimer-icon">⚕️</div>
+      <div class="disclaimer-text">
+        <h3>Important Notice</h3>
+        <p>
+          <strong>We are not doctors.</strong> All advice on this page is for general awareness only — based on air quality and weather data.
+          This is <strong>not a medical prescription</strong>. If your symptoms are serious, getting worse, or you feel unwell —
+          <strong>please visit your nearest doctor immediately.</strong> Your health is in your hands. 🙏
+        </p>
+      </div>
+    </div>
+
+    <!-- Main Glass Card -->
+    <div class="glass-card" style="margin-top: 24px;">
+
+      <!-- Risk Level -->
+      <div class="risk-card-inner" id="riskCard">
+        <div class="risk-level-title" id="riskLevel">Loading...</div>
+        <p class="risk-message" id="riskMessage">Fetching your location data, please wait...</p>
+      </div>
+
+      <!-- Do's and Don'ts -->
+      <div class="advice-grid">
+        <div class="advice-col">
+          <h3 style="color: var(--color-good);">
+            <i class="fa-solid fa-circle-check"></i> What You Should Do
+          </h3>
+          <ul class="advice-list" id="dosList"></ul>
+        </div>
+        <div class="advice-col">
+          <h3 style="color: var(--color-severe);">
+            <i class="fa-solid fa-circle-xmark"></i> What You Should Avoid
+          </h3>
+          <ul class="advice-list" id="dontsList"></ul>
+        </div>
+      </div>
+
+      <!-- 🛒 What You Can Use -->
+      <div class="gear-section">
+        <h3>
+          <i class="fa-solid fa-bag-shopping" style="color: var(--accent);"></i>
+          What You Can Use Today
+          <span style="font-size: 12px; font-weight: 400; color: var(--text-muted);">(things commonly available in India)</span>
+        </h3>
+        <div class="gear-grid" id="gearGrid">
+          <p class="no-gear">Loading recommendations...</p>
+        </div>
+      </div>
+
+      <!-- Environmental Data -->
+      <div class="env-grid">
+        <div class="env-chip">
+          <strong id="valAqi">--</strong>
+          Outdoor AQI
+        </div>
+        <div class="env-chip">
+          <strong id="valIndoorAqi">--</strong>
+          Est. Indoor AQI
+        </div>
+        <div class="env-chip">
+          <strong id="valWind">--</strong>
+          Wind Speed (km/h)
+        </div>
+        <div class="env-chip">
+          <strong id="valHumidity">--</strong>
+          Humidity (%)
+        </div>
+        <div class="env-chip">
+          <strong id="reasonProfile" style="text-transform: capitalize;">--</strong>
+          Your Health Profile
+        </div>
+      </div>
+
+    </div><!-- /glass-card -->
+
+  </main>
+
+  <!-- Settings Modal -->
+  <div class="modal" id="settingsModal">
+    <div class="modal-content">
+      <h2 class="modal-title">Personalized Profile</h2>
+      <div class="form-group">
+        <label for="healthProfile">Primary Health Condition</label>
+        <select id="healthProfile">
+          <option value="none">No specific conditions (Healthy)</option>
+          <option value="asthma">Asthma or Breathing Problems</option>
+          <option value="senior">Senior Citizen (60+ years)</option>
+          <option value="heart">Heart Condition</option>
+          <option value="allergies">Allergies / Skin Issues</option>
+        </select>
+      </div>
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button class="btn" onclick="closeSettings()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveSettings()">Save &amp; Recalculate</button>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      if (!localStorage.getItem("ecoPulse_userName")) { window.location.href = "login.html"; return; }
+
+      const profilesRaw = localStorage.getItem("ecoPulse_userProfiles") || '["none"]';
+      const userProfiles = JSON.parse(profilesRaw);
+      document.getElementById("reasonProfile").innerText = userProfiles.join(", ");
+
+      const city = localStorage.getItem("ecoPulse_lastCity") || "Mumbai";
+      const savedLat = localStorage.getItem("ecoPulse_lastLat");
+      const savedLon = localStorage.getItem("ecoPulse_lastLon");
+      const exactLat = savedLat ? parseFloat(savedLat) : null;
+      const exactLon = savedLon ? parseFloat(savedLon) : null;
+      document.getElementById("headerCity").innerText = city;
+
+      try {
+        const cityData = await getCityData(city, exactLat, exactLon);
+        if (cityData) {
+          const risk = calculateRisk(cityData, userProfiles);
+
+          // Fill env data
+          document.getElementById("valAqi").innerText = cityData.aqi;
+          document.getElementById("valIndoorAqi").innerText = risk.indoorAqi;
+          document.getElementById("valWind").innerText = cityData.windSpeed;
+          document.getElementById("valHumidity").innerText = cityData.humidity;
+
+          // Risk level
+          const riskLevelEl = document.getElementById("riskLevel");
+          riskLevelEl.innerText = risk.level;
+          riskLevelEl.style.color = risk.color;
+          document.getElementById("riskCard").style.borderColor = risk.color;
+          document.getElementById("riskCard").style.boxShadow = `inset 0 0 20px ${risk.color}22`;
+          document.getElementById("riskMessage").innerText = risk.message;
+
+          // Do's list
+          const dosHtml = risk.dos.map(item =>
+            `<li>${item}</li>`
+          ).join("");
+          document.getElementById("dosList").innerHTML = dosHtml;
+
+          // Don'ts list
+          const dontsHtml = risk.donts.map(item =>
+            `<li>${item}</li>`
+          ).join("");
+          document.getElementById("dontsList").innerHTML = dontsHtml;
+
+          // Gear / Products
+          const gearGrid = document.getElementById("gearGrid");
+          if (risk.gear && risk.gear.length > 0) {
+            gearGrid.innerHTML = risk.gear.map(g => `
+              <div class="gear-card">
+                <div class="gear-card-icon">${g.icon}</div>
+                <div class="gear-card-name">${g.name}</div>
+                <p class="gear-card-desc">${g.desc}</p>
+              </div>
+            `).join("");
+          } else {
+            gearGrid.innerHTML = `<p class="no-gear">✅ No special items needed today — conditions are good!</p>`;
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    });
+
+    function openSettings() { document.getElementById("settingsModal").classList.add("active"); }
+    function closeSettings() { document.getElementById("settingsModal").classList.remove("active"); }
+    function saveSettings() {
+      localStorage.setItem("ecoPulse_profile", document.getElementById("healthProfile").value);
+      location.reload();
+    }
+  </script>
+</body>
+
+</html>
